@@ -24,7 +24,7 @@ All custom configuration files are stored in `configs/`.
 After installing Ubuntu Server:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/utm-dwm-setup.git
+git clone https://github.com/AxelrodAsaf/utm-dwm-setup.git
 cd utm-dwm-setup
 chmod +x install.sh
 ./install.sh
