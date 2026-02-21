@@ -1,31 +1,105 @@
-# UTM dwm Setup
+# utm-dwm-setup
 
-Minimal reproducible dwm-based environment for Ubuntu (UTM VM).
+Minimal reproducible Ubuntu 24.04 (ARM64) environment running dwm inside UTM.
 
-## Overview
-
-This repo bootstraps a minimal X11 + dwm setup including:
-
-- dwm (with autostart patch)
-- st
-- dmenu
-- slstatus (time in bar)
-- picom (transparency)
-- feh (wallpaper)
-- Firefox
-- Basic fonts
-
-All custom configuration files are stored in `configs/`.
+This repository contains configuration files and install script to recreate a clean tiling window manager setup.
 
 ---
 
-## Installation (Fresh VM)
+## System Overview
 
-After installing Ubuntu Server:
+Base:
+- Ubuntu 24.04.4 LTS (ARM64)
+- Running inside UTM VM
 
-```bash
-git clone https://github.com/AxelrodAsaf/utm-dwm-setup.git
-cd utm-dwm-setup
-chmod +x install.sh
-./install.sh
+Window Manager:
+- dwm 6.8 (with autostart patch)
 
+Status Bar:
+- slstatus (custom config)
+
+Terminal:
+- st (transparent via picom)
+
+Compositor:
+- picom (transparency enabled)
+
+Browser:
+- Firefox (APT version, snap removed)
+
+Media:
+- mpv
+- yt-dlp
+
+Developer Tools:
+- neovim
+- fzf
+- git
+- gh CLI
+- node
+
+---
+
+## System State (Minimal Base v1.0)
+
+This VM has been aggressively trimmed.
+
+Removed:
+- Snap + snapd
+- Printing (CUPS)
+- Bluetooth (bluez)
+- Avahi (network discovery)
+- Speech stack
+- Crash reporting (apport, whoopsie)
+- GNOME terminal
+- XFCE panel libraries
+- GTK desktop portal backend
+
+Current disk usage after cleanup:
+6.9G / 11G (68%)
+
+---
+
+## Directory Structure
+
+configs/
+    dwm_config.h
+    slstatus_config.h
+    picom.conf
+    autostart.sh
+
+install.sh
+
+---
+
+## Install Instructions
+
+Clone repository:
+
+    git clone https://github.com/AxelrodAsaf/utm-dwm-setup.git
+    cd utm-dwm-setup
+
+Run installer:
+
+    chmod +x install.sh
+    ./install.sh
+
+Then login via TTY and run:
+
+    startx
+
+---
+
+## Notes
+
+This system is designed to be:
+
+- Snap-free
+- Minimal background services
+- Lightweight
+- Reproducible
+- Development-ready
+
+Future planned phases:
+- CLI YouTube feed integration
+- Plex CLI integration
