@@ -1,47 +1,90 @@
-#!/bin/bash
-
+#!/usr/bin/env bash
 set -e
 
-echo "Updating system..."
+echo "=== Updating system ==="
 sudo apt update
-sudo apt install -y \
-  build-essential git curl \
-  libx11-dev libxft-dev libxinerama-dev \
-  xorg xinit \
-  feh picom \
-  neovim firefox thunar \
-  fonts-dejavu fonts-firacode
+sudo apt upgrade -y
 
-echo "Creating source directory..."
+echo "=== Removing snap and unnecessary services ==="
+sudo snap remove firefox 2>/dev/null || true
+sudo snap remove gnome-42-2204 2>/dev/null || true
+sudo snap remove gtk-common-themes 2>/dev/null || true
+sudo snap remove core22 2>/dev/null || true
+sudo snap remove bare 2>/dev/null || true
+sudo snap remove snapd 2>/dev/null || true
+sudo apt purge -y snapd
+sudo rm -rf ~/snap /snap /var/snap /var/lib/snapd
+
+sudo apt purge -y \
+cups* \
+bluez* \
+avahi-daemon avahi-utils \
+speech-dispatcher* \
+espeak* \
+brltty \
+modemmanager \
+whoopsie \
+apport* \
+xdg-desktop-portal-gtk \
+policykit-1-gnome || true
+
+sudo apt autoremove --purge -y
+sudo apt clean
+
+echo "=== Installing required packages ==="
+sudo apt install -y \
+xorg \
+build-essential \
+libx11-dev \
+libxft-dev \
+libxinerama-dev \
+libfontconfig1-dev \
+picom \
+neovim \
+fzf \
+git \
+curl \
+mpv \
+python3-venv \
+python3-pip \
+nodejs \
+npm \
+gh
+
+echo "=== Installing Firefox (APT version) ==="
+sudo add-apt-repository ppa:mozillateam/ppa -y
+sudo apt update
+sudo apt install -y firefox
+
+echo "=== Cloning suckless tools ==="
 mkdir -p ~/src/suckless
 cd ~/src/suckless
 
-echo "Cloning suckless repos..."
 git clone https://git.suckless.org/dwm
 git clone https://git.suckless.org/st
-git clone https://git.suckless.org/dmenu
 git clone https://git.suckless.org/slstatus
 
-echo "Applying configs..."
-
-# dwm
+echo "=== Applying configs ==="
 cp ~/repos/utm-dwm-setup/configs/dwm_config.h ~/src/suckless/dwm/config.h
+cp ~/repos/utm-dwm-setup/configs/slstatus_config.h ~/src/suckless/slstatus/config.h
+cp ~/repos/utm-dwm-setup/configs/picom.conf ~/.config/picom.conf 2>/dev/null || mkdir -p ~/.config && cp ~/repos/utm-dwm-setup/configs/picom.conf ~/.config/picom.conf
+cp ~/repos/utm-dwm-setup/configs/autostart.sh ~/.dwm-autostart.sh
+
+echo "=== Building dwm ==="
 cd ~/src/suckless/dwm
 sudo make clean install
 
-# slstatus
-cp ~/repos/utm-dwm-setup/configs/slstatus_config.h ~/src/suckless/slstatus/config.h
+echo "=== Building st ==="
+cd ~/src/suckless/st
+sudo make clean install
+
+echo "=== Building slstatus ==="
 cd ~/src/suckless/slstatus
 sudo make clean install
 
-# Autostart
-mkdir -p ~/.dwm
-cp ~/repos/utm-dwm-setup/configs/autostart.sh ~/.dwm/autostart.sh
-chmod +x ~/.dwm/autostart.sh
+echo "=== Installing yt-dlp properly (pipx-style) ==="
+python3 -m venv ~/.venvs/yt
+~/.venvs/yt/bin/pip install yt-dlp
 
-# Picom config
-mkdir -p ~/.config/picom
-cp ~/repos/utm-dwm-setup/configs/picom.conf ~/.config/picom/picom.conf
-
-echo "Setup complete."
-echo "Run: startx"
+echo "=== Setup complete ==="
+echo "Log into TTY and run: startx"
