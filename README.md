@@ -101,25 +101,26 @@ Upstream is never committed to this repository.
 
 ## Install
 
-Clone:
+From a fresh Ubuntu 24.04 installation:
 
+```bash
+sudo apt update
+sudo apt install -y git
 
-git clone git@github.com
-:AxelrodAsaf/utm-dwm-setup.git
+Clone repository (HTTPS works without SSH setup):
+
+git clone https://github.com/AxelrodAsaf/utm-dwm-setup.git
 cd utm-dwm-setup
 
-
-Run:
-
+Run installer:
 
 chmod +x install.sh
 ./install.sh
 
-
-Then:
-
+Then start X:
 
 startx
+
 
 
 ---
@@ -151,4 +152,5 @@ Phase 2:
 Next:
 - True pristine upstream build model
 - Patch documentation layer
-- Performance tuning iteration
+- Performance tuning iteratio
+-
