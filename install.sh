@@ -73,18 +73,16 @@ mkdir -p ~/.config/picom
 cp "$REPO_DIR/configs/picom.conf" ~/.config/picom/picom.conf
 
 mkdir -p ~/.dwm
-cp "$REPO_DIR/configs/autostart.sh" ~/.dwm/autostart.sh
-chmod +x ~/.dwm/autostart.sh
+ln -sf "$REPO_DIR/configs/autostart.sh" ~/.dwm/autostart.sh
 
 # Notes script
 mkdir -p ~/.local/bin
-cp "$REPO_DIR/configs/notes" ~/.local/bin/notes
-chmod +x ~/.local/bin/notes
+ln -sf "$REPO_DIR/configs/notes" ~/.local/bin/notes
+chmod +x "$REPO_DIR/configs/notes"
 
 # Neovim config
 mkdir -p ~/.config/nvim
-cp "$REPO_DIR/configs/nvim_init.vim" ~/.config/nvim/init.vim
-
+ln -sf "$REPO_DIR/configs/nvim_init.vim" ~/.config/nvim/init.vim
 
 echo "=== Building dwm ==="
 cd ~/src/suckless/dwm
