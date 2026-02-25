@@ -53,7 +53,7 @@ picom.conf
 autostart.sh
 notes
 nvim_init.vim
-
+ZZ
 
 User-facing files are **symlinked** to these:
 
@@ -64,6 +64,58 @@ User-facing files are **symlinked** to these:
 
 
 This prevents configuration drift.
+
+---
+
+## Repository Structure
+
+
+utm-dwm-setup/
+├── configs/
+│ ├── dwm_config.h
+│ ├── slstatus_config.h
+│ ├── picom.conf
+│ ├── autostart.sh
+│ ├── notes
+│ └── nvim_init.vim
+├── install.sh
+└── README.md
+
+
+### configs/
+
+This directory contains all canonical configuration files.
+
+- `dwm_config.h`  
+  Injected into `~/src/suckless/dwm/config.h` before build.
+
+- `slstatus_config.h`  
+  Injected into `~/src/suckless/slstatus/config.h` before build.
+
+- `picom.conf`  
+  Installed to `~/.config/picom/picom.conf`.
+
+- `autostart.sh`  
+  Symlinked to `~/.dwm/autostart.sh`.
+
+- `notes`  
+  Notes launcher script (dmenu-based).  
+  Symlinked to `~/.local/bin/notes`.
+
+- `nvim_init.vim`  
+  Neovim configuration.  
+  Symlinked to `~/.config/nvim/init.vim`.
+
+### install.sh
+
+Bootstrap script that:
+
+- Removes snap and unnecessary services
+- Installs required packages
+- Clones suckless repositories
+- Injects config headers
+- Builds dwm, st, slstatus
+- Creates symlinks for user-level configs
 
 ---
 
