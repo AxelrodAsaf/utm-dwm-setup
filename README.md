@@ -173,7 +173,7 @@ chmod +x install.sh
 Then start X:
 
 startx
-
+```
 
 
 ---
