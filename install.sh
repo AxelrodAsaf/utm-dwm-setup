@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "=== Updating system ==="
 sudo apt update
@@ -60,15 +61,20 @@ echo "=== Cloning suckless tools ==="
 mkdir -p ~/src/suckless
 cd ~/src/suckless
 
-git clone https://git.suckless.org/dwm
-git clone https://git.suckless.org/st
-git clone https://git.suckless.org/slstatus
+[ -d dwm/.git ] || git clone https://git.suckless.org/dwm
+[ -d st/.git ] || git clone https://git.suckless.org/st
+[ -d slstatus/.git ] || git clone https://git.suckless.org/slstatus
 
 echo "=== Applying configs ==="
-cp ~/repos/utm-dwm-setup/configs/dwm_config.h ~/src/suckless/dwm/config.h
-cp ~/repos/utm-dwm-setup/configs/slstatus_config.h ~/src/suckless/slstatus/config.h
-cp ~/repos/utm-dwm-setup/configs/picom.conf ~/.config/picom.conf 2>/dev/null || mkdir -p ~/.config && cp ~/repos/utm-dwm-setup/configs/picom.conf ~/.config/picom.conf
-cp ~/repos/utm-dwm-setup/configs/autostart.sh ~/.dwm-autostart.sh
+cp "$REPO_DIR/configs/dwm_config.h" ~/src/suckless/dwm/config.h
+cp "$REPO_DIR/configs/slstatus_config.h" ~/src/suckless/slstatus/config.h
+
+mkdir -p ~/.config/picom
+cp "$REPO_DIR/configs/picom.conf" ~/.config/picom/picom.conf
+
+mkdir -p ~/.dwm
+cp "$REPO_DIR/configs/autostart.sh" ~/.dwm/autostart.sh
+chmod +x ~/.dwm/autostart.sh
 
 echo "=== Building dwm ==="
 cd ~/src/suckless/dwm
@@ -82,9 +88,9 @@ echo "=== Building slstatus ==="
 cd ~/src/suckless/slstatus
 sudo make clean install
 
-echo "=== Installing yt-dlp properly (pipx-style) ==="
+echo "=== Installing yt-dlp properly (venv) ==="
 python3 -m venv ~/.venvs/yt
-~/.venvs/yt/bin/pip install yt-dlp
+~/.venvs/yt/bin/pip install -U pip yt-dlp
 
 echo "=== Setup complete ==="
 echo "Log into TTY and run: startx"
