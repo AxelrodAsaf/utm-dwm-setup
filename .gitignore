@@ -1,0 +1,16 @@
+# Build artifacts
+*.o
+dwm
+st
+dmenu
+
+# Editor
+*.swp
+*.swo
+*.bak
+
+# Cache
+.cache/
+
+# System
+.DS_Store
