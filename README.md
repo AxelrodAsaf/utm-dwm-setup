@@ -69,17 +69,18 @@ This prevents configuration drift.
 
 ## Repository Structure
 
-
+```text
 utm-dwm-setup/
 ├── configs/
-│ ├── dwm_config.h
-│ ├── slstatus_config.h
-│ ├── picom.conf
-│ ├── autostart.sh
-│ ├── notes
-│ └── nvim_init.vim
+│   ├── autostart.sh
+│   ├── dwm_config.h
+│   ├── slstatus_config.h
+│   ├── picom.conf
+│   ├── notes
+│   └── nvim_init.vim
 ├── install.sh
 └── README.md
+```
 
 
 ### configs/
