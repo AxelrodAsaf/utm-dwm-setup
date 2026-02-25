@@ -1,105 +1,154 @@
 # utm-dwm-setup
 
-Minimal reproducible Ubuntu 24.04 (ARM64) environment running dwm inside UTM.
+Reproducible Ubuntu 24.04 (ARM64) tiling environment running **dwm 6.8** inside UTM on Apple Silicon.
 
-This repository contains configuration files and install script to recreate a clean tiling window manager setup.
+This repository is the **canonical configuration layer** for the VM.  
+All user-level configuration lives here and is symlinked into place to prevent drift.
 
 ---
 
-## System Overview
+## Architecture Overview
 
-Base:
-- Ubuntu 24.04.4 LTS (ARM64)
-- Running inside UTM VM
+Host:
+- macOS
+- UTM virtualization
+- 8GB RAM total (VM tuned for stability)
+
+Guest:
+- Ubuntu 24.04 LTS (ARM64)
+- Snap removed
+- Background services aggressively minimized
 
 Window Manager:
-- dwm 6.8 (with autostart patch)
+- dwm 6.8
+- Custom keybindings (MOD = Super/Command)
+- Notes integration
+- Custom dmenu scripts
+
+Terminal:
+- st
 
 Status Bar:
 - slstatus (custom config)
 
-Terminal:
-- st (transparent via picom)
-
 Compositor:
-- picom (transparency enabled)
+- picom (transparent st)
 
-Browser:
-- Firefox (APT version, snap removed)
-
-Media:
-- mpv
-- yt-dlp
-
-Developer Tools:
-- neovim
-- fzf
-- git
-- gh CLI
-- node
+Editor:
+- Neovim (markdown-focused setup)
 
 ---
 
-## System State (Minimal Base v1.0)
+## Canonical Config Model
 
-This VM has been aggressively trimmed.
+This repository is the single source of truth.
 
-Removed:
-- Snap + snapd
-- Printing (CUPS)
-- Bluetooth (bluez)
-- Avahi (network discovery)
-- Speech stack
-- Crash reporting (apport, whoopsie)
-- GNOME terminal
-- XFCE panel libraries
-- GTK desktop portal backend
+All editable configs live in:
 
-Current disk usage after cleanup:
-6.9G / 11G (68%)
-
----
-
-## Directory Structure
 
 configs/
-    dwm_config.h
-    slstatus_config.h
-    picom.conf
-    autostart.sh
+dwm_config.h
+slstatus_config.h
+picom.conf
+autostart.sh
+notes
+nvim_init.vim
 
-install.sh
 
----
+User-facing files are **symlinked** to these:
 
-## Install Instructions
 
-Clone repository:
+~/.dwm/autostart.sh
+~/.local/bin/notes
+~/.config/nvim/init.vim
 
-    git clone https://github.com/AxelrodAsaf/utm-dwm-setup.git
-    cd utm-dwm-setup
 
-Run installer:
-
-    chmod +x install.sh
-    ./install.sh
-
-Then login via TTY and run:
-
-    startx
+This prevents configuration drift.
 
 ---
 
-## Notes
+## Upstream Policy
 
-This system is designed to be:
+Upstream suckless repositories live in:
 
+
+~/src/suckless/
+dwm/
+st/
+slstatus/
+
+
+They are treated as upstream source trees.
+
+`install.sh` injects the canonical config headers before building:
+
+- dwm_config.h → dwm/config.h
+- slstatus_config.h → slstatus/config.h
+
+Upstream is never committed to this repository.
+
+---
+
+## Keybindings (Custom)
+
+- MOD = Super (Command)
+- MOD + x → Quit dwm
+- MOD + Shift + n → Notes launcher
+- MOD + p → Custom dmenu launcher
+- MOD + Shift + p → Process killer
+
+---
+
+## Install
+
+Clone:
+
+
+git clone git@github.com
+:AxelrodAsaf/utm-dwm-setup.git
+cd utm-dwm-setup
+
+
+Run:
+
+
+chmod +x install.sh
+./install.sh
+
+
+Then:
+
+
+startx
+
+
+---
+
+## Design Goals
+
+- Minimal
+- Deterministic
 - Snap-free
-- Minimal background services
-- Lightweight
-- Reproducible
-- Development-ready
+- Low background services
+- No config drift
+- Git-tracked environment
 
-Future planned phases:
-- CLI YouTube feed integration
-- Plex CLI integration
+---
+
+## Phase Status
+
+Phase 1:
+- Minimal base system
+- Snap removal
+- dwm environment stable
+
+Phase 2:
+- Canonical config layer
+- Drift-free symlink model
+- Notes system integration
+- Neovim markdown workflow
+
+Next:
+- True pristine upstream build model
+- Patch documentation layer
+- Performance tuning iteration
