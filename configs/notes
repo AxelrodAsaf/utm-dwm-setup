@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+NOTES_DIR="${NOTES_DIR:-$HOME/notes}"
+TERMINAL="${TERMINAL:-st}"
+EDITOR="${EDITOR:-nvim}"
+
+mkdir -p "$NOTES_DIR"
+
+list_notes() {
+  find "$NOTES_DIR" -type f -name '*.md' -printf '%T@ %P\n' 2>/dev/null \
+    | sort -nr \
+    | cut -d' ' -f2-
+}
+
+new_note() {
+  name="$(dmenu -c -i -p 'New note name:' </dev/null || true)"
+  if [ -z "${name// }" ]; then
+    name="$(date +%F_%H-%M-%S)"
+  fi
+
+  file="$NOTES_DIR/$name.md"
+  touch "$file"
+  setsid -f "$TERMINAL" -e "$EDITOR" "$file" >/dev/null 2>&1
+  sleep 0.15
+  xdotool key --clearmodifiers super+Return
+}
+
+delete_note() {
+  note="$(list_notes | dmenu -c -l 12 -i -p 'Delete which note?')" || exit 0
+  [ -z "${note:-}" ] && exit 0
+
+  confirm="$(printf "No\nYes" | dmenu -c -i -p "Delete '$note'?")" || exit 0
+
+  if [ "$confirm" = "Yes" ]; then
+    rm -f "$NOTES_DIR/$note"
+  fi
+}
+
+main() {
+  choice="$(
+    {
+      echo "New"
+      echo "Delete"
+      list_notes
+    } | dmenu -c -l 14 -i -p 'Notes:'
+  )" || exit 0
+
+  case "$choice" in
+    New) new_note ;;
+    Delete) delete_note ;;
+    *.md)
+      setsid -f "$TERMINAL" -e "$EDITOR" "$NOTES_DIR/$choice" >/dev/null 2>&1
+      sleep 0.15
+      xdotool key --clearmodifiers super+Return
+      ;;
+  esac
+}
+
+main
