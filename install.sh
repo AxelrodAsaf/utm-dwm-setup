@@ -89,7 +89,16 @@ cd ~/src/suckless/dwm
 sudo make clean install
 
 echo "=== Building st ==="
-cd ~/src/suckless/st
+# --- st ---
+ST_DIR="$HOME/src/suckless/st"
+
+if [ -d "$ST_DIR" ]; then
+  echo "[*] Injecting st config"
+  cp -f "$REPO_DIR/configs/st_config.h" "$ST_DIR/config.h"
+fi
+
+echo "[*] Building st"
+cd "$ST_DIR"
 sudo make clean install
 
 echo "=== Building slstatus ==="
