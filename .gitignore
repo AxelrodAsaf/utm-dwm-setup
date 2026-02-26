@@ -1,9 +1,3 @@
-# Build artifacts
-*.o
-dwm
-st
-dmenu
-
 # Editor
 *.swp
 *.swo
@@ -29,6 +23,10 @@ dmenu
 .cache/
 tmp/
 temp/
+
+# Patches / scratch
+*.diff
+*.patch
 
 # Python (if any scripts appear later)
 __pycache__/
