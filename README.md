@@ -161,6 +161,8 @@ They are treated as upstream source trees.
 
 Upstream is never committed to this repository.
 
+Patches are stored under ```patches/``` and applied by ```install.sh``` to keep upstream clones pristine/reproducible.
+
 ---
 
 ## Keybindings (Custom)

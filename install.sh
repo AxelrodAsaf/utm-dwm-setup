@@ -89,6 +89,12 @@ if ! grep -q "runautostart" dwm.c; then
   patch -p1 < "$REPO_DIR/patches/dwm/autostart.patch"
 fi
 
+# Apply dwm patches (repo-canonical)
+DWM_DIR="$HOME/src/suckless/dwm"
+if [ -f "$REPO_DIR/patches/dwm/autostart.patch" ]; then
+  ( cd "$DWM_DIR" && patch -p1 --forward < "$REPO_DIR/patches/dwm/autostart.patch" ) || true
+fi
+
 echo "=== Building dwm ==="
 cd ~/src/suckless/dwm
 sudo make clean install
