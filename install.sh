@@ -84,6 +84,11 @@ chmod +x "$REPO_DIR/configs/notes"
 mkdir -p ~/.config/nvim
 ln -sf "$REPO_DIR/configs/nvim_init.vim" ~/.config/nvim/init.vim
 
+cd "$HOME/src/suckless/dwm"
+if ! grep -q "runautostart" dwm.c; then
+  patch -p1 < "$REPO_DIR/patches/dwm/autostart.patch"
+fi
+
 echo "=== Building dwm ==="
 cd ~/src/suckless/dwm
 sudo make clean install
