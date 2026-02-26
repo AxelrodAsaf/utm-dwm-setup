@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DMENU="${DMENU:-dmenu -i -l 20}"
+PROMPT="${PROMPT:-LastPass}"
+
+need() { command -v "$1" >/dev/null 2>&1 || { echo "missing: $1" >&2; exit 1; }; }
+
+need lpass
+need dmenu
+need sed
+
+# Ensure logged in
+if ! lpass status -q >/dev/null 2>&1; then
+  echo "LastPass: not logged in (run: lpass login <email>)" >&2
+  exit 1
+fi
+
+# Build menu lines like: "Folder/Entry Name  |id: 123456789"
+# (robustly extract numeric id from "[id: N]" that lpass prints)
+choice="$(
+  lpass ls --color=never \
+  | sed -E 's/\[id: ([0-9]+)\]/ |id: \1/' \
+  | eval "$DMENU -p \"$PROMPT\""
+)"
+
+[ -n "${choice:-}" ] || exit 0
+
+id="$(printf '%s\n' "$choice" | sed -nE 's/.*\|id: ([0-9]+).*/\1/p')"
+[ -n "${id:-}" ] || { echo "LastPass: could not parse id" >&2; exit 1; }
+
+# Action menu (default to password)
+action="$(
+  printf "password\nusername\nurl\notp\n" \
+  | eval "$DMENU -p \"Copy\""
+)"
+action="${action:-password}"
+
+case "$action" in
+  password) lpass show --clip --password "$id" ;;
+  username) lpass show --clip --username "$id" ;;
+  url)      lpass show --clip --url "$id" ;;
+  otp)      lpass show --clip --otp "$id" ;;
+  *)        exit 0 ;;
+esac

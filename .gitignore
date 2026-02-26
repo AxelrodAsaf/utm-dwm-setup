@@ -14,3 +14,33 @@ dmenu
 
 # System
 .DS_Store
+*~
+
+# Local env / secrets
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Local caches/logs
+*.log
+.cache/
+tmp/
+temp/
+
+# Python (if any scripts appear later)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node (just in case)
+node_modules/
+
+# Build artifacts
+*.o
+*.a
+*.so
+*.out

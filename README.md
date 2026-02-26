@@ -53,7 +53,7 @@ picom.conf
 autostart.sh
 notes
 nvim_init.vim
-ZZ
+
 
 User-facing files are **symlinked** to these:
 
@@ -74,10 +74,14 @@ utm-dwm-setup/
 ├── configs/
 │   ├── autostart.sh
 │   ├── dwm_config.h
+│   ├── st_config.h
 │   ├── slstatus_config.h
 │   ├── picom.conf
 │   ├── notes
-│   └── nvim_init.vim
+│   ├── nvim_init.vim
+│   ├── dmenu-runapps
+│   ├── dmenu-killproc
+│   └── lpassmenu
 ├── install.sh
 └── README.md
 ```
@@ -87,24 +91,40 @@ utm-dwm-setup/
 
 This directory contains all canonical configuration files.
 
-- `dwm_config.h`  
+- `st_config.h`
+  Injected into `~/src/suckless/st/config.h` before build.
+  Includes runtime zoom bindings and alpha transparency configuration.
+
+- `dmenu-runapps`
+  Custom application launcher script.
+  Symlinked to `~/.local/bin/dmenu-runapps`.
+
+- `dmenu-killproc`
+  Process selection and kill helper.
+  Symlinked to `~/.local/bin/dmenu-killproc`.
+
+- `lpassmenu`
+  LastPass CLI integration via dmenu.
+  Symlinked to `~/.local/bin/lpassmenu`.
+
+- `dwm_config.h`
   Injected into `~/src/suckless/dwm/config.h` before build.
 
-- `slstatus_config.h`  
+- `slstatus_config.h`
   Injected into `~/src/suckless/slstatus/config.h` before build.
 
-- `picom.conf`  
+- `picom.conf`
   Installed to `~/.config/picom/picom.conf`.
 
-- `autostart.sh`  
+- `autostart.sh`
   Symlinked to `~/.dwm/autostart.sh`.
 
-- `notes`  
-  Notes launcher script (dmenu-based).  
+- `notes`
+  Notes launcher script (dmenu-based).
   Symlinked to `~/.local/bin/notes`.
 
-- `nvim_init.vim`  
-  Neovim configuration.  
+- `nvim_init.vim`
+  Neovim configuration. 
   Symlinked to `~/.config/nvim/init.vim`.
 
 ### install.sh
@@ -136,6 +156,7 @@ They are treated as upstream source trees.
 `install.sh` injects the canonical config headers before building:
 
 - dwm_config.h → dwm/config.h
+- st_config.h → st/config.h
 - slstatus_config.h → slstatus/config.h
 
 Upstream is never committed to this repository.
@@ -149,6 +170,29 @@ Upstream is never committed to this repository.
 - MOD + Shift + n → Notes launcher
 - MOD + p → Custom dmenu launcher
 - MOD + Shift + p → Process killer
+
+---
+
+## LastPass CLI Integration
+
+LastPass CLI is built from source during install.  
+The Ubuntu repository version is too old for modern authentication.
+
+Workflow:
+
+- Login: `lpass login <email>`
+- Launch via `MOD + p` → select "LastPass"
+- Choose entry
+- Select field to copy (password / username / url / otp)
+
+Clipboard behavior:
+
+- Uses `lpass --clip`
+- Timeout controlled by `LPASS_CLIPBOARD_TIMEOUT`
+- Vault cache stored locally in `~/.lpass/`
+- No secrets or vault data are tracked in this repository
+
+No browser extension is required.
 
 ---
 
@@ -205,5 +249,4 @@ Phase 2:
 Next:
 - True pristine upstream build model
 - Patch documentation layer
-- Performance tuning iteratio
--
+- Performance tuning iteration

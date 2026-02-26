@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+# Pick a process (PID + name) and kill it.
+choice=$(ps -u "$USER" -o pid=,comm= | sed 's/^ *//' | dmenu -c -i -l 12 -p "Kill:")
+[ -z "$choice" ] && exit 0
+pid=${choice%% *}
+kill "$pid"

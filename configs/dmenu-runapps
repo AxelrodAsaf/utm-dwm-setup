@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+# Text-only launcher with descriptions. Edit the LIST block to customize.
+choice=$(
+  cat <<'LIST' | dmenu -c -i -l 12 -p "Run:"
+AsafNotes
+QuteBrowser
+LastPass
+Firefox
+PCManFM - File Manager
+CMUS - Music Player
+st - Terminal
+LIST
+)
+
+case "$choice" in
+  "AsafNotes") exec notes;;
+  "QuteBrowser") exec qutebrowser;;
+  "LastPass") exec lpassmenu;;
+  "Firefox") exec firefox ;;
+  "PCManFM - File Manage)") exec pcmanfm ;;
+  "CMUS - Music Player") exec st -e cmus ;;
+  "st - Terminal") exec st ;;
+  *) exit 0 ;;
+esac
