@@ -84,6 +84,16 @@ chmod +x "$REPO_DIR/configs/notes"
 mkdir -p ~/.config/nvim
 ln -sf "$REPO_DIR/configs/nvim_init.vim" ~/.config/nvim/init.vim
 
+# Qutebrowser config (canonical)
+mkdir -p ~/.config/qutebrowser
+ln -sf "$REPO_DIR/configs/qutebrowser/config.py" ~/.config/qutebrowser/config.py
+ln -sfn "$REPO_DIR/configs/qutebrowser/css" ~/.config/qutebrowser/css
+
+# Prevent autoconfig drift
+if [ -f ~/.config/qutebrowser/autoconfig.yml ]; then
+  mv ~/.config/qutebrowser/autoconfig.yml ~/.config/qutebrowser/autoconfig.yml.bak.$(date +%Y%m%d_%H%M%S)
+fi
+
 cd "$HOME/src/suckless/dwm"
 if ! grep -q "runautostart" dwm.c; then
   patch -p1 < "$REPO_DIR/patches/dwm/autostart.patch"

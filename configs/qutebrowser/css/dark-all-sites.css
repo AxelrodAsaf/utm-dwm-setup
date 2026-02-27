@@ -1,0 +1,21 @@
+/* Minimal global dark stylesheet.
+   Goal: readable baseline, not a perfect theme for every site. */
+
+html, body {
+  background: #111 !important;
+  color: #e6e6e6 !important;
+}
+
+a, a:visited { color: #8ab4f8 !important; }
+a:hover { text-decoration: underline !important; }
+
+input, textarea, select, button {
+  background: #1a1a1a !important;
+  color: #e6e6e6 !important;
+  border: 1px solid #333 !important;
+}
+
+pre, code {
+  background: #0e0e0e !important;
+  color: #e6e6e6 !important;
+}
