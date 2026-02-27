@@ -4,7 +4,7 @@
 const unsigned int interval = 1000;
 
 /* text to show if no value can be retrieved */
-static const char unknown_str[] = "n/a";
+static const char unknown_str[] = "-";
 
 /* maximum output string length */
 #define MAXLEN 2048
@@ -20,6 +20,7 @@ static const char unknown_str[] = "n/a";
  *                                                     NULL on OpenBSD/FreeBSD
  * cat                 read arbitrary file             path
  * cpu_freq            cpu frequency in MHz            NULL
+ *
  * cpu_perc            cpu usage in percent            NULL
  * datetime            date and time                   format string (%F %T)
  * disk_free           free disk space in GB           mountpoint path (/)
@@ -42,6 +43,7 @@ static const char unknown_str[] = "n/a";
  * num_files           number of files in a directory  path
  *                                                     (/home/foo/Inbox/cur)
  * ram_free            free memory in GB               NULL
+ *
  * ram_perc            memory usage in percent         NULL
  * ram_total           total memory size in GB         NULL
  * ram_used            used memory in GB               NULL
@@ -66,5 +68,7 @@ static const char unknown_str[] = "n/a";
  */
 static const struct arg args[] = {
     /* function            format              argument */
-    { datetime,            "%s",               "%Y-%m-%d %H:%M" },
+	{ cpu_perc,	       " CPU: %s |",	   NULL },
+	{ ram_perc,	       " RAM: %s |",		   NULL },
+	{ datetime,            " %s ",               "%Y-%m-%d %H:%M" },
 };

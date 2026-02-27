@@ -113,8 +113,11 @@ cd "$ST_DIR"
 sudo make clean install
 
 echo "=== Building slstatus ==="
+cp -f "$REPO_DIR/configs/slstatus_config.h" "$HOME/src/suckless/slstatus/config.h"
 cd ~/src/suckless/slstatus
-sudo make clean install
+make clean
+make
+sudo make install
 
 echo "=== Installing yt-dlp properly (venv) ==="
 python3 -m venv ~/.venvs/yt
