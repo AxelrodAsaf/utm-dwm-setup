@@ -1,13 +1,63 @@
 #!/bin/sh
-set -eu
+# YouTube search via dmenu, formatted like youtube-subs-dmenu
+# Output columns: Channel | Duration | Title | id
+# Then mpv opens https://youtu.be/<id>
 
-DMENU="${DMENU:-dmenu -i -l 20 -p 'YouTube Search:'}"
-QUERY="$(printf '' | sh -c "$DMENU")"
+set -u
+
+: "${MAX_RESULTS:=30}"
+: "${MAX_TITLE:=80}"
+
+DMENU_CMD="${DMENU_CMD:-dmenu -i -l 20 -p 'YouTube Search:'}"
+
+QUERY="$(printf '' | sh -c "$DMENU_CMD")"
 [ -n "${QUERY:-}" ] || exit 0
 
-# Get results as: "title | url"
-CHOICE="$(yt-dlp --flat-playlist --print "%(title)s | %(webpage_url)s" "ytsearch30:$QUERY" | sh -c "$DMENU")" || exit 0
-URL="$(printf '%s' "$CHOICE" | awk -F' \\| ' '{print $NF}')"
-[ -n "${URL:-}" ] || exit 0
+cache="${XDG_CACHE_HOME:-$HOME/.cache}"
+tmpdir="$(mktemp -d "$cache/youtube-search.XXXXXX")" || exit 1
+raw="$tmpdir/raw"
+menu="$tmpdir/menu"
+trap 'rm -rf "$tmpdir"' EXIT INT HUP TERM
 
-exec mpv --ytdl=yes "$URL"
+# Raw record format:
+# channel|||duration_string|||title|||id
+yt-dlp --flat-playlist "ytsearch${MAX_RESULTS}:$QUERY" 2>/dev/null \
+  --replace-in-metadata title '[\r\n\t]+' ' ' \
+  --print "%(uploader)s|||%(duration_string)s|||%(title)s|||%(id)s" \
+| awk -F'\\|\\|\\|' 'NF>=4 && $1!="" && $4!="" { print }' \
+> "$raw" || true
+
+[ -s "$raw" ] || exit 0
+
+# Compute widths (channel + title), cap title width.
+max_chan="$(awk -F'\\|\\|\\|' '{ if(length($1)>m) m=length($1) } END{ print (m?m:7) }' "$raw")"
+max_title="$(awk -F'\\|\\|\\|' -v cap="$MAX_TITLE" '{ if(length($3)>m) m=length($3) } END{ if(!m)m=20; if(m>cap)m=cap; print m }' "$raw")"
+
+# Format duration with leading zeros:
+# mm:ss => 06:23
+# h:mm:ss => 01:02:03
+awk -F'\\|\\|\\|' -v mc="$max_chan" -v mt="$max_title" '
+function z2(x){ return (length(x)<2 ? "0"x : x) }
+function fmt(d, a,n){
+  if(d=="" || d=="NA") return "??:??"
+  n=split(d,a,":")
+  if(n==2) return z2(a[1]) ":" z2(a[2])
+  if(n==3) return z2(a[1]) ":" z2(a[2]) ":" z2(a[3])
+  return d
+}
+function trunc(s, n){ return (length(s)>n ? substr(s,1,n-1) "…" : s) }
+{
+  chan=$1
+  dur=fmt($2)
+  title=trunc($3, mt)
+  id=$4
+  # duration is RIGHT-aligned to 8 chars (padding on the left)
+  printf "%-*s | %8s | %-*s | %s\n", mc, chan, dur, mt, title, id
+}
+' "$raw" >"$menu"
+
+CHOICE="$(cat "$menu" | sh -c "$DMENU_CMD")" || exit 0
+VID="$(printf '%s' "$CHOICE" | awk -F' \\| ' '{print $NF}')"
+[ -n "${VID:-}" ] || exit 0
+
+exec mpv --ytdl=yes "https://youtu.be/$VID"
