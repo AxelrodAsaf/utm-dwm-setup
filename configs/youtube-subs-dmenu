@@ -1,27 +1,125 @@
 #!/bin/sh
-set -eu
+# YouTube subscriptions via dmenu (two-stage).
+# Stage 1: select a channel (from auto cache; pinned URLs optional).
+# Stage 2: show aligned video list for that channel.
 
-SUBS_FILE="${SUBS_FILE:-$HOME/.config/yt-subs.txt}"
-DMENU="${DMENU:-dmenu -i -l 20 -p 'YouTube Subs:'}"
+set -u
 
-[ -f "$SUBS_FILE" ] || exit 0
+PINNED_FILE="${SUBS_FILE:-$HOME/.config/yt-subs.txt}"
+DMENU_CMD="${DMENU:-dmenu -i -l 20 -p 'YouTube Subs:'}"
+MAX_PER_CH="${MAX_PER_CH:-15}"
+MAX_TITLE="${MAX_TITLE:-90}"
 
-# Build a menu of recent videos from all channels.
-# Keep it simple + fast: grab the first 15 items from each channel's /videos feed.
-MENU="$(
-  while IFS= read -r ch; do
-    case "$ch" in
-      ''|\#*) continue ;;
-    esac
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}"
+AUTO_CACHE="${YT_SUBS_AUTO_CACHE:-$CACHE_DIR/yt-subs.auto.txt}"
+AUTO_MAX_AGE_SEC="${YT_SUBS_AUTO_MAX_AGE_SEC:-43200}" # 12h
+AUTO_DISABLE="${YT_SUBS_AUTO_DISABLE:-0}"
 
-    yt-dlp --flat-playlist -I 1:15 \
-      --print "%(uploader)s - %(title)s | %(webpage_url)s" \
-      "$ch/videos" || true
-  done < "$SUBS_FILE"
-)"
+mkdir -p "$CACHE_DIR" || exit 1
 
-CHOICE="$(printf '%s\n' "$MENU" | sh -c "$DMENU")" || exit 0
-URL="$(printf '%s' "$CHOICE" | awk -F' \\| ' '{print $NF}')"
-[ -n "${URL:-}" ] || exit 0
+chraw="$CACHE_DIR/yt-subs.channels.raw.$$"
+chmenu="$CACHE_DIR/yt-subs.channels.menu.$$"
+raw="$CACHE_DIR/yt-subs.raw.$$"
+menu="$CACHE_DIR/yt-subs.menu.$$"
+trap 'rm -f "$chraw" "$chmenu" "$raw" "$menu" "${chraw}.u"' EXIT INT HUP TERM
 
-exec mpv --ytdl=yes "$URL"
+maybe_refresh_auto() {
+  [ "$AUTO_DISABLE" = "1" ] && return 0
+  [ -x "$HOME/.local/bin/youtube-subs-scan" ] || return 0
+
+  if [ ! -f "$AUTO_CACHE" ]; then
+    "$HOME/.local/bin/youtube-subs-scan" >/dev/null 2>&1 || true
+    return 0
+  fi
+
+  now="$(date +%s 2>/dev/null || echo 0)"
+  mtime="$(stat -c %Y "$AUTO_CACHE" 2>/dev/null || echo 0)"
+  age=$(( now - mtime ))
+  if [ "$now" -gt 0 ] && [ "$mtime" -gt 0 ] && [ "$age" -gt "$AUTO_MAX_AGE_SEC" ]; then
+    "$HOME/.local/bin/youtube-subs-scan" >/dev/null 2>&1 || true
+  fi
+}
+
+build_channel_menu() {
+  : >"$chraw"
+  : >"$chmenu"
+
+  # Auto cache lines are: name|||url
+  if [ "$AUTO_DISABLE" != "1" ] && [ -f "$AUTO_CACHE" ]; then
+    awk -F'\\|\\|\\|' '
+      /^[[:space:]]*#/ { next }
+      NF>=2 && $1!="" && $2!="" { print $1 "|||" $2 }
+    ' "$AUTO_CACHE" >>"$chraw"
+  fi
+
+  # Pinned file: allow either "name|||url" OR plain url
+  if [ -f "$PINNED_FILE" ]; then
+    awk -F'\\|\\|\\|' '
+      /^[[:space:]]*$/ { next }
+      /^[[:space:]]*#/ { next }
+      NF>=2 { print $1 "|||" $2; next }
+      NF==1 { print "(pinned)|||" $1 }
+    ' "$PINNED_FILE" >>"$chraw"
+  fi
+
+  # De-dup raw records
+  awk '!seen[$0]++' "$chraw" > "${chraw}.u" && mv -f "${chraw}.u" "$chraw"
+  [ -s "$chraw" ] || return 1
+
+  # Compute max name width, then print padded "name | url"
+  maxn="$(awk -F'\\|\\|\\|' '{ if(length($1)>m) m=length($1) } END{ print (m?m:8) }' "$chraw")"
+  awk -F'\\|\\|\\|' -v m="$maxn" '{ printf "%-*s | %s\n", m, $1, $2 }' "$chraw" >"$chmenu"
+  return 0
+}
+
+maybe_refresh_auto
+build_channel_menu || exit 0
+[ -s "$chmenu" ] || exit 0
+
+CHSEL="$(cat "$chmenu" | sh -c "$DMENU_CMD")" || exit 0
+CHURL="$(printf '%s' "$CHSEL" | awk -F' \\| ' '{print $NF}')"
+[ -n "${CHURL:-}" ] || exit 0
+
+# Resolve a nice channel label (best-effort, but only for the ONE selected channel)
+CHAN="$(yt-dlp --print '%(channel)s' -I 1:1 "$CHURL" 2>/dev/null | sed -n '1p' || true)"
+[ -n "${CHAN:-}" ] || CHAN="$(printf '%s' "$CHSEL" | awk -F' \\| ' '{print $1}')"
+[ -n "${CHAN:-}" ] || CHAN="Unknown"
+
+: >"$raw"
+
+yt-dlp --flat-playlist -I "1:$MAX_PER_CH" \
+  --replace-in-metadata title '[\r\n\t]+' ' ' \
+  --print "%(duration_string)s|||%(title)s|||%(id)s" \
+  "$CHURL/videos" 2>/dev/null \
+| awk -v chan="$CHAN" -F'\\|\\|\\|' 'NF>=3 { print chan "|||" $0 }' \
+>>"$raw" || true
+
+[ -s "$raw" ] || exit 0
+
+max_chan="$(awk -F'\\|\\|\\|' '{ if(length($1)>m) m=length($1) } END{ print (m?m:7) }' "$raw")"
+max_title="$(awk -F'\\|\\|\\|' -v cap="$MAX_TITLE" '{ if(length($3)>m) m=length($3) } END{ if(!m)m=20; if(m>cap)m=cap; print m }' "$raw")"
+
+awk -F'\\|\\|\\|' -v mc="$max_chan" -v mt="$max_title" '
+function z2(x){ return (length(x)<2 ? "0"x : x) }
+function fmt(d, a,n){
+  if(d=="" || d=="NA") return "??:??"
+  n=split(d,a,":")
+  if(n==2) return z2(a[1]) ":" z2(a[2])
+  if(n==3) return z2(a[1]) ":" z2(a[2]) ":" z2(a[3])
+  return d
+}
+function trunc(s, n){ return (length(s)>n ? substr(s,1,n-1) "…" : s) }
+{
+  chan=$1
+  dur=fmt($2)
+  title=trunc($3, mt)
+  id=$4
+  printf "%-*s | %8s | %-*s | %s\n", mc, chan, dur, mt, title, id
+}
+' "$raw" >"$menu"
+
+CHOICE="$(cat "$menu" | sh -c "$DMENU_CMD")" || exit 0
+VID="$(printf '%s' "$CHOICE" | awk -F' \\| ' '{print $NF}')"
+[ -n "${VID:-}" ] || exit 0
+
+exec mpv --ytdl=yes "https://youtu.be/$VID"
