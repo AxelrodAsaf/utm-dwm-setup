@@ -2,7 +2,9 @@
 # YouTube subscriptions via dmenu (two-stage).
 # Stage 1: select a channel (from auto cache; pinned URLs optional).
 # Stage 2: show aligned video list for that channel.
-# Includes a "<-- BACK" option in the video list to return to channel picker.
+# BACK behavior:
+# - Channel picker: "<-- BACK" returns to youtube-dmenu (exit 0)
+# - Video list: "<-- BACK" returns to channel picker (continue)
 
 set -u
 
@@ -22,7 +24,7 @@ chraw="$CACHE_DIR/yt-subs.channels.raw.$$"
 chmenu="$CACHE_DIR/yt-subs.channels.menu.$$"
 raw="$CACHE_DIR/yt-subs.raw.$$"
 menu="$CACHE_DIR/yt-subs.menu.$$"
-trap 'rm -f "$chraw" "$chmenu" "$raw" "$menu" "${chraw}.u" "${chmenu}.u"' EXIT INT HUP TERM
+trap 'rm -f "$chraw" "$chmenu" "$raw" "$menu" "${chraw}.u" "${chmenu}.b"' EXIT INT HUP TERM
 
 maybe_refresh_auto() {
   [ "$AUTO_DISABLE" = "1" ] && return 0
@@ -66,17 +68,24 @@ build_channel_menu() {
 
   maxn="$(awk -F'\\|\\|\\|' '{ if(length($1)>m) m=length($1) } END{ print (m?m:8) }' "$chraw")"
   awk -F'\\|\\|\\|' -v m="$maxn" '{ printf "%-*s | %s\n", m, $1, $2 }' "$chraw" >"$chmenu"
+
+  # Prepend BACK row aligned to maxn; sentinel URL is "__BACK__"
+  awk -v m="$maxn" 'BEGIN{ printf "%-*s | %s\n", m, "<-- BACK", "__BACK__" } { print }' \
+    "$chmenu" > "${chmenu}.b" && mv -f "${chmenu}.b" "$chmenu"
+
   return 0
 }
 
+maybe_refresh_auto
+
 while :; do
-  maybe_refresh_auto
   build_channel_menu || exit 0
   [ -s "$chmenu" ] || exit 0
 
   CHSEL="$(cat "$chmenu" | sh -c "$DMENU_CMD")" || exit 0
   CHURL="$(printf '%s' "$CHSEL" | awk -F' \\| ' '{print $NF}')"
   [ -n "${CHURL:-}" ] || exit 0
+  [ "$CHURL" = "__BACK__" ] && exit 0
 
   CHAN="$(yt-dlp --print '%(channel)s' -I 1:1 "$CHURL" 2>/dev/null | sed -n '1p' || true)"
   [ -n "${CHAN:-}" ] || CHAN="$(printf '%s' "$CHSEL" | awk -F' \\| ' '{print $1}')"
@@ -106,7 +115,6 @@ while :; do
   }
   function trunc(s, n){ return (length(s)>n ? substr(s,1,n-1) "…" : s) }
   BEGIN {
-    # BACK row uses same column formatting as results; sentinel id is "__BACK__"
     printf "%-*s | %8s | %-*s | %s\n", mc, "<-- BACK", "", mt, "Return to channels", "__BACK__"
   }
   {
