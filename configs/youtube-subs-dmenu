@@ -1,0 +1,27 @@
+#!/bin/sh
+set -eu
+
+SUBS_FILE="${SUBS_FILE:-$HOME/.config/yt-subs.txt}"
+DMENU="${DMENU:-dmenu -i -l 20 -p 'YouTube Subs:'}"
+
+[ -f "$SUBS_FILE" ] || exit 0
+
+# Build a menu of recent videos from all channels.
+# Keep it simple + fast: grab the first 15 items from each channel's /videos feed.
+MENU="$(
+  while IFS= read -r ch; do
+    case "$ch" in
+      ''|\#*) continue ;;
+    esac
+
+    yt-dlp --flat-playlist -I 1:15 \
+      --print "%(uploader)s - %(title)s | %(webpage_url)s" \
+      "$ch/videos" || true
+  done < "$SUBS_FILE"
+)"
+
+CHOICE="$(printf '%s\n' "$MENU" | sh -c "$DMENU")" || exit 0
+URL="$(printf '%s' "$CHOICE" | awk -F' \\| ' '{print $NF}')"
+[ -n "${URL:-}" ] || exit 0
+
+exec mpv --ytdl=yes "$URL"

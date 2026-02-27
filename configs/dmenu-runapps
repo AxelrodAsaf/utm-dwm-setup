@@ -1,4 +1,3 @@
-#!/usr/bin/env sh
 # Text-only launcher with descriptions. Edit the LIST block to customize.
 choice=$(
   cat <<'LIST' | dmenu -c -i -l 12 -p "Run:"
@@ -7,8 +6,11 @@ QuteBrowser
 LastPass
 Firefox
 PCManFM - File Manager
+YouTube - Search
+YouTube - Subscriptions
 CMUS - Music Player
 st - Terminal
+---CANCEL---
 LIST
 )
 
@@ -17,8 +19,11 @@ case "$choice" in
   "QuteBrowser") exec qutebrowser;;
   "LastPass") exec lpassmenu;;
   "Firefox") exec firefox ;;
-  "PCManFM - File Manage)") exec pcmanfm ;;
+  "PCManFM - File Manager") exec pcmanfm ;;
   "CMUS - Music Player") exec st -e cmus ;;
   "st - Terminal") exec st ;;
+  "YouTube - Search") exec st -e "$HOME/.local/bin/youtube-search-dmenu" ;;
+  "YouTube - Subscriptions") exec st -e "$HOME/.local/bin/youtube-subs-dmenu" ;;
+  "---CANCEL---") exit 0 ;;
   *) exit 0 ;;
 esac

@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+
+DMENU="${DMENU:-dmenu -i -l 20 -p 'YouTube Search:'}"
+QUERY="$(printf '' | sh -c "$DMENU")"
+[ -n "${QUERY:-}" ] || exit 0
+
+# Get results as: "title | url"
+CHOICE="$(yt-dlp --flat-playlist --print "%(title)s | %(webpage_url)s" "ytsearch30:$QUERY" | sh -c "$DMENU")" || exit 0
+URL="$(printf '%s' "$CHOICE" | awk -F' \\| ' '{print $NF}')"
+[ -n "${URL:-}" ] || exit 0
+
+exec mpv --ytdl=yes "$URL"

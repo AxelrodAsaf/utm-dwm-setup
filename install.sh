@@ -80,6 +80,11 @@ mkdir -p ~/.local/bin
 ln -sf "$REPO_DIR/configs/notes" ~/.local/bin/notes
 chmod +x "$REPO_DIR/configs/notes"
 
+# YouTube tools (yt-dlp + dmenu + mpv)
+mkdir -p ~/.local/bin ~/.config
+ln -sf "$REPO_DIR/configs/youtube-search-dmenu" ~/.local/bin/youtube-search-dmenu
+ln -sf "$REPO_DIR/configs/youtube-subs-dmenu"   ~/.local/bin/youtube-subs-dmenu
+ln -sf "$REPO_DIR/configs/youtube-subs.txt"     ~/.config/yt-subs.txt
 # Neovim config
 mkdir -p ~/.config/nvim
 ln -sf "$REPO_DIR/configs/nvim_init.vim" ~/.config/nvim/init.vim

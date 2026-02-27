@@ -1,0 +1,5 @@
+# One channel per line (YouTube channel URL or handle).
+# Examples:
+# https://www.youtube.com/channel/UCzkFCRiMcOBeef8xcaqipmw
+# https://www.youtube.com/@LinusTechTips
+https://www.youtube.com/channel/UCzkFCRiMcOBeef8xcaqipmw
