@@ -1,254 +1,108 @@
 # utm-dwm-setup
 
-Reproducible Ubuntu 24.04 (ARM64) tiling environment running **dwm 6.8** inside UTM on Apple Silicon.
+Reproducible Ubuntu 24.04 ARM64 `dwm` environment for UTM on Apple Silicon.
 
-This repository is the **canonical configuration layer** for the VM.  
-All user-level configuration lives here and is symlinked into place to prevent drift.
+## Architecture
 
----
+- Host: macOS on Apple Silicon (M1)
+- Guest: Ubuntu 24.04 ARM64 in UTM
+- WM stack: `dwm` + `st` + `slstatus` + `picom`
+- Config model: repo-managed configs are installed into `$HOME` (some are symlinked)
 
-## Architecture Overview
-
-Host:
-- macOS
-- UTM virtualization
-- 8GB RAM total (VM tuned for stability)
-
-Guest:
-- Ubuntu 24.04 LTS (ARM64)
-- Snap removed
-- Background services aggressively minimized
-
-Window Manager:
-- dwm 6.8
-- Custom keybindings (MOD = Super/Command)
-- Notes integration
-- Custom dmenu scripts
-
-Terminal:
-- st
-
-Status Bar:
-- slstatus (custom config)
-
-Compositor:
-- picom (transparent st)
-
-Editor:
-- Neovim (markdown-focused setup)
-
----
-
-## Canonical Config Model
-
-This repository is the single source of truth.
-
-All editable configs live in:
-
-
-configs/
-dwm_config.h
-slstatus_config.h
-picom.conf
-autostart.sh
-notes
-nvim_init.vim
-
-
-User-facing files are **symlinked** to these:
-
-
-~/.dwm/autostart.sh
-~/.local/bin/notes
-~/.config/nvim/init.vim
-
-
-This prevents configuration drift.
-
----
-
-## Repository Structure
+## File Structure
 
 ```text
 utm-dwm-setup/
-├── configs/
-│   ├── autostart.sh
-│   ├── dwm_config.h
-│   ├── st_config.h
-│   ├── slstatus_config.h
-│   ├── picom.conf
-│   ├── notes
-│   ├── nvim_init.vim
-│   ├── dmenu-runapps
-│   ├── dmenu-killproc
-│   └── lpassmenu
+├── .gitignore
+├── README.md
 ├── install.sh
-└── README.md
+└── configs/
+    ├── autostart.sh
+    ├── dmenu-killproc
+    ├── dmenu-runapps
+    ├── dwm_config.h
+    ├── lpassmenu
+    ├── notes
+    ├── nvim_init.vim
+    ├── picom.conf
+    ├── qutebrowser/config.py
+    ├── qutebrowser/css/dark-all-sites.css
+    ├── slstatus_config.h
+    ├── st_config.h
+    ├── youtube-search-dmenu
+    ├── youtube-subs-dmenu
+    ├── youtube-subs-scan
+    └── youtube-subs.txt
 ```
 
+## What Each File Does
 
-### configs/
+- `install.sh`: bootstrap script. Updates apt packages, removes Snap/services, installs dependencies, clones suckless repos, applies config files, sets up symlinks, and builds/install `dwm`, `st`, and `slstatus`.
+- `configs/dwm_config.h`: `dwm` behavior (MOD key, layouts, tags, rules, keybindings, launcher hooks).
+- `configs/st_config.h`: `st` build-time config injected into upstream `st/config.h`.
+- `configs/slstatus_config.h`: status bar modules and format (CPU, RAM, and datetime).
+- `configs/picom.conf`: compositor config (xrender backend, vsync, terminal transparency rule).
+- `configs/autostart.sh`: session startup (`slstatus`, wallpaper via `~/.fehbg`, `picom`, terminal).
+- `configs/dmenu-runapps`: app launcher menu used by `MOD + p`.
+- `configs/dmenu-killproc`: dmenu process picker/killer helper.
+- `configs/notes`: notes utility entrypoint exposed in `~/.local/bin/notes`.
+- `configs/nvim_init.vim`: Neovim config symlinked to `~/.config/nvim/init.vim`.
+- `configs/lpassmenu`: LastPass CLI dmenu helper.
+- `configs/youtube-search-dmenu`: YouTube search flow.
+- `configs/youtube-subs-dmenu`: YouTube subscriptions flow.
+- `configs/youtube-subs-scan`: discovery/cache refresh script for subscriptions list.
+- `configs/youtube-subs.txt`: static seed list for subscriptions.
+- `configs/qutebrowser/config.py`: qutebrowser settings.
+- `configs/qutebrowser/css/dark-all-sites.css`: qutebrowser stylesheet.
+- `.gitignore`: excludes machine-local files and artifacts.
+- `README.md`: project documentation.
 
-This directory contains all canonical configuration files.
+## Setup Theory (Why It Is Structured This Way)
 
-- `st_config.h`
-  Injected into `~/src/suckless/st/config.h` before build.
-  Includes runtime zoom bindings and alpha transparency configuration.
+- Keep upstream suckless repos in `~/src/suckless/*`, and keep custom behavior in this repo.
+- Inject headers (`*_config.h`) at build-time so runtime stays deterministic.
+- Symlink user-level scripts/configs to repo files to prevent config drift.
+- Keep VM lean by removing unused desktop services.
 
-- `dmenu-runapps`
-  Custom application launcher script.
-  Symlinked to `~/.local/bin/dmenu-runapps`.
+## Useful Keybindings (`configs/dwm_config.h`)
 
-- `dmenu-killproc`
-  Process selection and kill helper.
-  Symlinked to `~/.local/bin/dmenu-killproc`.
+`MOD` is `Super` (`Mod4Mask`).
 
-- `lpassmenu`
-  LastPass CLI integration via dmenu.
-  Symlinked to `~/.local/bin/lpassmenu`.
-
-- `dwm_config.h`
-  Injected into `~/src/suckless/dwm/config.h` before build.
-
-- `slstatus_config.h`
-  Injected into `~/src/suckless/slstatus/config.h` before build.
-
-- `picom.conf`
-  Installed to `~/.config/picom/picom.conf`.
-
-- `autostart.sh`
-  Symlinked to `~/.dwm/autostart.sh`.
-
-- `notes`
-  Notes launcher script (dmenu-based).
-  Symlinked to `~/.local/bin/notes`.
-
-- `nvim_init.vim`
-  Neovim configuration. 
-  Symlinked to `~/.config/nvim/init.vim`.
-
-### install.sh
-
-Bootstrap script that:
-
-- Removes snap and unnecessary services
-- Installs required packages
-- Clones suckless repositories
-- Injects config headers
-- Builds dwm, st, slstatus
-- Creates symlinks for user-level configs
-
----
-
-## Upstream Policy
-
-Upstream suckless repositories live in:
-
-
-~/src/suckless/
-dwm/
-st/
-slstatus/
-
-
-They are treated as upstream source trees.
-
-`install.sh` injects the canonical config headers before building:
-
-- dwm_config.h → dwm/config.h
-- st_config.h → st/config.h
-- slstatus_config.h → slstatus/config.h
-
-Upstream is never committed to this repository.
-
-Patches are stored under ```patches/``` and applied by ```install.sh``` to keep upstream clones pristine/reproducible.
-
----
-
-## Keybindings (Custom)
-
-- MOD = Super (Command)
-- MOD + x → Quit dwm
-- MOD + Shift + n → Notes launcher
-- MOD + p → Custom dmenu launcher
-- MOD + Shift + p → Process killer
-
----
-
-## LastPass CLI Integration
-
-LastPass CLI is built from source during install.  
-The Ubuntu repository version is too old for modern authentication.
-
-Workflow:
-
-- Login: `lpass login <email>`
-- Launch via `MOD + p` → select "LastPass"
-- Choose entry
-- Select field to copy (password / username / url / otp)
-
-Clipboard behavior:
-
-- Uses `lpass --clip`
-- Timeout controlled by `LPASS_CLIPBOARD_TIMEOUT`
-- Vault cache stored locally in `~/.lpass/`
-- No secrets or vault data are tracked in this repository
-
-No browser extension is required.
-
----
+| Action                              | Keys                                    |
+|-------------------------------------|-----------------------------------------|
+| Launcher menu (`dmenu-runapps`)     | `Super + p`                             |
+| Process killer (`dmenu-killproc`)   | `Super + Shift + p`                     |
+| Notes launcher                      | `Super + Shift + n`                     |
+| Help command                        | `Super + Shift + ?`                     |
+| Toggle bar                          | `Super + b`                             |
+| Focus next / previous window        | `Super + j` / `Super + k`               |
+| Increase / decrease master clients  | `Super + i` / `Super + d`               |
+| Increase / decrease master area     | `Super + l` / `Super + h`               |
+| Promote focused window to master    | `Super + Enter`                         |
+| Tile / Float / Monocle              | `Super + t` / `Super + f` / `Super + m` |
+| Toggle floating                     | `Super + Shift + Space`                 |
+| Close focused window                | `Super + Shift + c`                     |
+| View tag `1..9`                     | `Super + 1..9`                          |
+| Move window to tag `1..9`           | `Super + Shift + 1..9`                  |
+| Quit `dwm`                          | `Super + x`                             |
 
 ## Install
-
-From a fresh Ubuntu 24.04 installation:
 
 ```bash
 sudo apt update
 sudo apt install -y git
-
-Clone repository (HTTPS works without SSH setup):
-
 git clone https://github.com/AxelrodAsaf/utm-dwm-setup.git
 cd utm-dwm-setup
-
-Run installer:
-
 chmod +x install.sh
 ./install.sh
-
-Then start X:
-
 startx
 ```
 
+## Usage Tips
 
----
-
-## Design Goals
-
-- Minimal
-- Deterministic
-- Snap-free
-- Low background services
-- No config drift
-- Git-tracked environment
-
----
-
-## Phase Status
-
-Phase 1:
-- Minimal base system
-- Snap removal
-- dwm environment stable
-
-Phase 2:
-- Canonical config layer
-- Drift-free symlink model
-- Notes system integration
-- Neovim markdown workflow
-
-Next:
-- True pristine upstream build model
-- Patch documentation layer
-- Performance tuning iteration
+- Before pushing, use `git status` and ensure only intended files changed.
+- Rebuild after header changes:
+  - `cd ~/src/suckless/dwm && sudo make clean install`
+  - `cd ~/src/suckless/st && sudo make clean install`
+  - `cd ~/src/suckless/slstatus && sudo make clean install`
+- If launcher behavior changes, verify `~/.local/bin/*` symlinks still point into this repo.
