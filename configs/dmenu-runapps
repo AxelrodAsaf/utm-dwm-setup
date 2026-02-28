@@ -6,8 +6,7 @@ QuteBrowser
 LastPass
 Firefox
 PCManFM - File Manager
-YouTube - Search
-YouTube - Subscriptions
+YouTube
 CMUS - Music Player
 st - Terminal
 ---CANCEL---
@@ -22,8 +21,7 @@ case "$choice" in
   "PCManFM - File Manager") exec pcmanfm ;;
   "CMUS - Music Player") exec st -e cmus ;;
   "st - Terminal") exec st ;;
-  "YouTube - Search") exec st -e "$HOME/.local/bin/youtube-search-dmenu" ;;
-  "YouTube - Subscriptions") exec st -e "$HOME/.local/bin/youtube-subs-dmenu" ;;
+  "YouTube") exec st -e "$HOME/.local/bin/youtube-dmenu" ;;
   "---CANCEL---") exit 0 ;;
   *) exit 0 ;;
 esac

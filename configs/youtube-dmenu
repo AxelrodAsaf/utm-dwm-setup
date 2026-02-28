@@ -1,0 +1,26 @@
+#!/bin/sh
+# Top-level YouTube menu (Search / Subscriptions).
+# Intended to be launched via st -e from dmenu-runapps.
+
+set -u
+
+DMENU_CMD="${DMENU:-dmenu -i -l 10 -p 'YouTube:'}"
+
+while :; do
+  CHOICE="$(printf '%s\n' \
+    "Search" \
+    "Subscriptions" \
+    | sh -c "$DMENU_CMD")" || exit 0
+
+  case "$CHOICE" in
+    "" )
+      exit 0
+      ;;
+    "Search")
+      youtube-search-dmenu
+      ;;
+    "Subscriptions")
+      youtube-subs-dmenu
+      ;;
+  esac
+done

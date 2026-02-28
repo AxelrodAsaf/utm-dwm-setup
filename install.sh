@@ -84,6 +84,8 @@ chmod +x "$REPO_DIR/configs/notes"
 mkdir -p ~/.local/bin ~/.config
 ln -sf "$REPO_DIR/configs/youtube-search-dmenu" ~/.local/bin/youtube-search-dmenu
 ln -sf "$REPO_DIR/configs/youtube-subs-dmenu"   ~/.local/bin/youtube-subs-dmenu
+ln -sf "$REPO_DIR/configs/youtube-dmenu"       ~/.local/bin/youtube-dmenu
+ln -sf "$REPO_DIR/configs/youtube-subs-scan"   ~/.local/bin/youtube-subs-scan
 ln -sf "$REPO_DIR/configs/youtube-subs.txt"     ~/.config/yt-subs.txt
 # Neovim config
 mkdir -p ~/.config/nvim
